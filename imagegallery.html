@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Image Gallery</title>
+  <style>
+    :root {
+      --primary: #222;
+      --accent: #ff4d6d;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
+      color: var(--primary);
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Filter Buttons */
+    .filter-btns {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .filter-btns button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 30px;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .filter-btns button:hover,
+    .filter-btns button.active {
+      background: var(--accent);
+    }
+
+    /* Masonry Gallery */
+    .gallery {
+      column-count: 3;
+      column-gap: 15px;
+      padding: 0 15px;
+    }
+    .gallery img {
+      width: 100%;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .gallery img:hover {
+      transform: scale(1.05);
+      filter: brightness(85%);
+    }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(6px);
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80%;
+      border-radius: 10px;
+      box-shadow: 0 0 30px rgba(255,255,255,0.3);
+      animation: zoomIn 0.3s ease;
+    }
+    @keyframes zoomIn {
+      from {transform: scale(0.9);}
+      to {transform: scale(1);}
+    }
+    .lightbox .caption {
+      margin-top: 15px;
+      color: #fff;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    /* Controls */
+    .close, .prev, .next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 2.2em;
+      color: #fff;
+      background: rgba(0,0,0,0.5);
+      padding: 8px 15px;
+      border-radius: 50%;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s;
+    }
+    .close {
+      top: 20px;
+      right: 30px;
+      transform: none;
+    }
+    .prev { left: 30px; }
+    .next { right: 30px; }
+    .close:hover, .prev:hover, .next:hover {
+      background: var(--accent);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .gallery { column-count: 2; }
+    }
+    @media (max-width: 600px) {
+      .gallery { column-count: 1; }
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Modern Image Gallery</h1>
+
+  <!-- Category Filter -->
+  <div class="filter-btns">
+    <button class="active" onclick="filterImages('all', this)">All</button>
+    <button onclick="filterImages('nature', this)">Nature</button>
+    <button onclick="filterImages('city', this)">City</button>
+    <button onclick="filterImages('animals', this)">Animals</button>
+  </div>
+
+  <!-- Gallery -->
+  <div class="gallery">
+    <img src="https://picsum.photos/id/1015/600/800" alt="Nature Waterfall" data-category="nature">
+    <img src="https://picsum.photos/id/1011/600/500" alt="Nature Lake" data-category="nature">
+    <img src="https://picsum.photos/id/1003/600/700" alt="Cute Dog" data-category="animals">
+    <img src="https://picsum.photos/id/1012/600/400" alt="City Skyline" data-category="city">
+    <img src="https://picsum.photos/id/1016/600/900" alt="Nature Mountains" data-category="nature">
+    <img src="https://picsum.photos/id/1020/600/700" alt="Lion" data-category="animals">
+    <img src="https://picsum.photos/id/1025/600/500" alt="Street" data-category="city">
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <span class="close" onclick="closeLightbox()">&times;</span>
+    <span class="prev" onclick="changeSlide(-1)">&#10094;</span>
+    <img id="lightbox-img" src="">
+    <span class="next" onclick="changeSlide(1)">&#10095;</span>
+    <div class="caption" id="caption"></div>
+  </div>
+
+  <script>
+    const images = document.querySelectorAll('.gallery img');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const caption = document.getElementById('caption');
+    const buttons = document.querySelectorAll('.filter-btns button');
+    let currentIndex = 0;
+
+    // Open Lightbox
+    images.forEach((img, index) => {
+      img.addEventListener('click', () => {
+        lightbox.style.display = 'flex';
+        lightboxImg.src = img.src;
+        caption.textContent = img.alt;
+        currentIndex = index;
+      });
+    });
+
+    // Close Lightbox
+    function closeLightbox() {
+      lightbox.style.display = 'none';
+    }
+
+    // Next/Prev
+    function changeSlide(step) {
+      const visibleImages = Array.from(images).filter(img => img.style.display !== 'none');
+      currentIndex = (currentIndex + step + visibleImages.length) % visibleImages.length;
+      lightboxImg.src = visibleImages[currentIndex].src;
+      caption.textContent = visibleImages[currentIndex].alt;
+    }
+
+    // Filter Function
+    function filterImages(category, btn) {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      images.forEach(img => {
+        if (category === 'all' || img.dataset.category === category) {
+          img.style.display = 'block';
+        } else {
+          img.style.display = 'none';
+        }
+      });
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (lightbox.style.display === 'flex') {
+        if (e.key === 'ArrowRight') changeSlide(1);
+        if (e.key === 'ArrowLeft') changeSlide(-1);
+        if (e.key === 'Escape') closeLightbox();
+      }
+    });
+  </script>
+</body>
+</html>
